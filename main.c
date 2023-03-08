@@ -11,11 +11,11 @@ int main(int argc, char **argv)
 
     FILE *fp = fopen(argv[1], "r");
     if (fp == NULL) {
-        printf("ERROR: input file open error\n");
+        fprintf(stderr, "ERROR: input file open error\n");
         return 1;
     }
 
-    struct word_counter_t *wc = word_counter_create(100);
+    struct word_counter_t *wc = word_counter_create(50000);
     {
         const char sep[] = " ,.!:;[]()";
         char buff[256];
