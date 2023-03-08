@@ -51,8 +51,8 @@ void word_counter_add(word_counter_t *wc, const char *word)
 {
     size_t word_len = strlen(word);
     
-    bool is_collision = true;
     size_t offset = 0;
+    bool is_collision = true;
     while (is_collision && ((wc->capacity - wc->size) > 0)) {
         size_t index = (hash(word) + offset) % wc->capacity;
         item_t *item = &wc->items[index];
