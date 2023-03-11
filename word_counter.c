@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+char *strdup(const char *s);
+
 struct item_t {
     char *key;
     size_t value;
@@ -30,6 +32,21 @@ size_t hash(const char *word)
     return ret;
 }
 
+void swap(word_counter_t *lhs, word_counter_t *rhs) 
+{
+    item_t *tmp_items = lhs->items;
+    lhs->items = rhs->items;
+    rhs->items = tmp_items;
+
+    size_t tmp_size = lhs->size;
+    lhs->size = rhs->size;
+    rhs->size = tmp_size;
+
+    size_t tmp_capacity = lhs->capacity;
+    lhs->capacity = rhs->capacity;
+    rhs->capacity = tmp_capacity;
+}
+
 
 word_counter_t *word_counter_create(size_t capacity)
 {
@@ -37,36 +54,45 @@ word_counter_t *word_counter_create(size_t capacity)
    
     ret->size = 0;
     ret->capacity = capacity;
-    ret->items = (item_t*) malloc(capacity * sizeof(item_t));
+    ret->items = (item_t*) calloc(capacity, sizeof(item_t));
 
-    for (size_t i=0; i!=capacity; ++i) {
-        ret->items[i].key = NULL;
-        ret->items[i].value = 0;
-    }
-    
     return ret;
 }
 
-void word_counter_add(word_counter_t *wc, const char *word)
+void rehash(word_counter_t *wc)
 {
+    word_counter_t *tmp_wc = word_counter_create(wc->capacity * 2);
+    for (size_t i=0; i!=wc->capacity; ++i) {
+        item_t *item = &wc->items[i];
+        word_counter_add(tmp_wc, item->key, item->value);
+    }  
+    swap(wc, tmp_wc);
+    word_counter_destroy(tmp_wc);
+}
+
+void word_counter_add(word_counter_t *wc, const char *word, size_t count)
+{
+    if (!word) {
+        return;
+    }
+
     size_t word_len = strlen(word);
     
     size_t offset = 0;
     bool is_collision = true;
-    while (is_collision && ((wc->capacity - wc->size) > 0)) {
-        size_t index = (hash(word) + offset) % wc->capacity;
+    size_t hash_word = hash(word);
+    while (is_collision) {
+        size_t index = (hash_word + offset * 773) % wc->capacity;
         item_t *item = &wc->items[index];
         if (!item->key) {
             is_collision = false;
-            item->key = (char*) malloc(word_len * sizeof(char) + 1);
-            strncpy(item->key, word, word_len);
-            item->key[word_len] = '\0';
-            item->value = 1;
+            item->key = strdup(word);
+            item->value = count;
             wc->size += 1;
         }
         else if (strncmp(item->key, word, word_len) == 0) {
             is_collision = false;
-            item->value += 1;
+            item->value += count;
         } 
         else {
             is_collision = true;
@@ -74,9 +100,8 @@ void word_counter_add(word_counter_t *wc, const char *word)
         }
     }
 
-    if (is_collision) {
-        fprintf(stderr, "ERROR: collision\n");
-        abort();
+    if (wc->size == wc->capacity) {
+        rehash(wc);
     }
 }
 

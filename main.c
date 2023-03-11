@@ -15,7 +15,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    struct word_counter_t *wc = word_counter_create(50000);
+    struct word_counter_t *wc = word_counter_create(10);
     {
         const char sep[] = " ,.!:;[]()";
         char buff[256];
@@ -23,7 +23,7 @@ int main(int argc, char **argv)
             if (fscanf(fp, "%255s", buff) > 0) {
                 char *word = strtok(buff, sep);
                 while (word != NULL) {
-                    word_counter_add(wc, word);
+                    word_counter_add(wc, word, 1);
                     word = strtok(NULL, sep);
                 }
             }
